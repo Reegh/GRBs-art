@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Optional
 from copy import deepcopy
 
-from gdt.core.spectra.functions import Band
+from gdt.core.spectra.functions import Band, PowerLaw, Comptonized, BlackBody
 from gdt.core.spectra.fitting import SpectralFitterCstat
 from gdt.missions.fermi.gbm.collection import GbmDetectorCollection
 
@@ -15,44 +15,80 @@ class SpectralFitterManager:
     
     def __init__(self, config_manager: ConfigManager):
         self.config = config_manager
+        self.model_template = None  # Plantilla del modelo
+        self.model_expression = None
+        self.eval_indices = None
         
-    def create_model(self) -> Band:
-        """Crea y configura un nuevo modelo Band"""
-        model_params = self.config.get_model_params()
+    def initialize_model(self):
+        """Inicializa el modelo una sola vez al inicio del análisis"""
+        fit_params = self.config.get_fitting_params()
+        self.model_expression = fit_params.get('model_expression')
         
-        model = Band()
+        if not self.model_expression:
+            raise ValueError("Debe especificar 'model_expression' en config.yaml")
         
-        # Convertir 'inf' string a np.inf si es necesario
-        min_values = model_params['min_values']
-        max_values = model_params['max_values']
+        print(f"   Modelo: {self.model_expression}")
         
-        # Asegurarse de que 'inf' se convierta a np.inf
-        min_values = [float(v) if v != 'inf' else np.inf for v in min_values]
-        max_values = [float(v) if v != 'inf' else np.inf for v in max_values]
+        # Crear entorno seguro con los modelos disponibles
+        available_models = {
+            'Band': Band,
+            'PowerLaw': PowerLaw,
+            'Comptonized': Comptonized,
+            'BlackBody': BlackBody,
+        }
         
-        model.min_values = min_values
-        model.max_values = max_values
-        model.default_values = model_params['default_values']
-        model.fix = model_params['fixed']
+        safe_dict = {model: available_models[model] for model in available_models}
         
-        print(f"   Modelo Band creado:")
-        print(f"   Parámetros fijos: {model.fix}")
-        print(f"   Valores por defecto: {model.default_values}")
+        try:
+            # Crear el modelo base desde la expresión
+            model = eval(self.model_expression, {"__builtins__": {}}, safe_dict)
+        except Exception as e:
+            raise ValueError(f"Error creando modelo: {e}")
+        
+        # Configurar parámetros si se especifican en YAML
+        if 'min_values' in fit_params:
+            min_vals = [float(v) if v != 'inf' else np.inf for v in fit_params['min_values']]
+            model.min_values = min_vals
+            
+        if 'max_values' in fit_params:
+            max_vals = [float(v) if v != 'inf' else np.inf for v in fit_params['max_values']]
+            model.max_values = max_vals
+            
+        if 'default_values' in fit_params:
+            model.default_values = fit_params['default_values']
+            
+        if 'fixed' in fit_params:
+            model.fix = fit_params['fixed']
+        
+        # Guardar plantilla del modelo
+        self.model_template = model
+        
+        # Obtener índices a evaluar
+        self.eval_indices = fit_params.get('eval_indices')
+        if not self.eval_indices:
+            raise ValueError("Debe especificar 'eval_indices' en config.yaml")
+        
+        print(f"   Evaluando índices: {self.eval_indices}")
         
         return model
     
+    def create_model_for_interval(self):
+        """Crea una copia nueva del modelo para cada intervalo"""
+        if self.model_template is None:
+            self.initialize_model()
+        
+        # Crear una copia profunda del modelo para no modificar la plantilla
+        return deepcopy(self.model_template)
+    
     def precompute_responses(self, rsps: GbmDetectorCollection, 
                             time_ranges: List[Tuple[float, float]]) -> List:
-        """Precalcula respuestas interpoladas para cada intervalo"""
+        """Precalcula respuestas interpoladas"""
         print(f"Precalculando respuestas para {len(time_ranges)} intervalos...")
         
         rsps_interpoladas = []
-        for i, (t0, t1) in enumerate(time_ranges):
+        for t0, t1 in time_ranges:
             tcent = (t0 + t1) / 2
             rsps_interpoladas.append([rsp.interpolate(tcent) for rsp in rsps])
-            
-            if i % 10 == 0 and i > 0:
-                print(f"   {i}/{len(time_ranges)} intervalos procesados")
         
         print("Respuestas precalculadas")
         return rsps_interpoladas
@@ -62,32 +98,32 @@ class SpectralFitterManager:
                     rsps_interp: List, 
                     t0: float, t1: float) -> Optional[Dict]:
         """
-        Realiza ajuste espectral para un intervalo específico
+        Ajusta un intervalo
         """
         fit_params = self.config.get_fitting_params()
-        fit_options = fit_params['fit_options']
-        max_fit_time = fit_params['max_fit_time']
-        error_threshold = fit_params['relative_error_threshold']
+        fit_options = fit_params.get('fit_options', {})
+        max_fit_time = fit_params.get('max_fit_time', 10)
+        error_threshold = fit_params.get('relative_error_threshold', 0.2)
         
         try:
-            # Crear un NUEVO modelo para cada ajuste
-            model = self.create_model()
+            # Crear una nueva instancia del modelo para este intervalo
+            model = self.create_model_for_interval()
             
             # Crear fitter
             fitter = SpectralFitterCstat(
-                phas, bkgds.to_list(), rsps_interp, method=fit_options['method']
+                phas, bkgds.to_list(), rsps_interp, method=fit_options.get('method', 'TNC')
             )
             
             start_time = time.time()
             
             # Intentar ajuste
             try:
-                fitter.fit(model, options={'maxiter': fit_options['maxiter']})
+                fitter.fit(model, options={'maxiter': fit_options.get('maxiter', 500)})
             except Exception as e:
                 print(f"Error en ajuste {t0:.3f}-{t1:.3f}: {e}")
                 return None
             
-            # Verificar timeout
+            # Timeout
             if time.time() - start_time > max_fit_time:
                 print(f"Timeout en ajuste {t0:.3f}-{t1:.3f}")
                 return None
@@ -98,7 +134,7 @@ class SpectralFitterManager:
                 return None
             
             if fitter.covariance is None or np.isnan(fitter.covariance).any():
-                print(f"Covarianza inválida en {t0:.3f}-{t1:.3f}")
+                print(f"Covarianza invalida en {t0:.3f}-{t1:.3f}")
                 return None
             
             # Calcular errores
@@ -106,58 +142,54 @@ class SpectralFitterManager:
             params = np.array(fitter.parameters)
             
             if len(errs) != len(params):
-                print(f"Inconsistencia en errores/parámetros en {t0:.3f}-{t1:.3f}")
+                print(f"Inconsistencia en errores/parametros en {t0:.3f}-{t1:.3f}")
                 return None
             
+            # Calcular errores relativos
             eps = 1e-10
             rel_errs = np.mean(
                 np.abs(errs) / np.maximum(np.abs(params[:, None]), eps),
                 axis=1
             )
             
-            # Evaluar errores de alpha y Epeak
-            indices_eval = [1, 2]  # Epeak y alpha
-            rel_errs_eval = rel_errs[indices_eval]
+            # Evaluar errores en los índices especificados
+            rel_errs_eval = rel_errs[self.eval_indices]
             max_rel = np.max(rel_errs_eval)
             
             # Guardar si errores aceptables
             if max_rel < error_threshold:
                 res = self._create_result_dict(t0, t1, fitter, model, errs, rel_errs)
-                print(f"{t0:.3f}–{t1:.3f} s: ✅ Fit guardado (C-stat={fitter.statistic:.1f})")
+                print(f"{t0:.3f}–{t1:.3f} s: Fit guardado")
                 return res
             else:
-                print(f"{t0:.3f}–{t1:.3f} s: ❌ Errores grandes ({max_rel*100:.1f}%)")
+                print(f"{t0:.3f}–{t1:.3f} s: Errores grandes ({max_rel*100:.1f}%)")
                 return None
                 
         except Exception as e:
-            print(f"Error crítico en {t0}-{t1}: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Error en {t0}-{t1}: {e}")
             return None
     
     def _create_result_dict(self, t0: float, t1: float, 
-                          fitter: SpectralFitterCstat, model: Band,
+                          fitter: SpectralFitterCstat, model,
                           errs: np.ndarray, rel_errs: np.ndarray) -> Dict:
-        """Crea diccionario estructurado con resultados"""
+        """Crea diccionario con resultados"""
         res = {
             "t_start": t0,
             "t_stop": t1,
             "Cstat": fitter.statistic,
             "dof": fitter.dof,
-            "Cstat_dof": fitter.statistic / fitter.dof,
         }
         
         # Parámetros y errores
-        param_names = [name[0] for name in model.param_list]
-        for name, val in zip(param_names, fitter.parameters):
-            res[name] = float(val)
+        for name, val in zip(model.param_list, fitter.parameters):
+            res[name[0]] = float(val)
         
-        for i, (name, val) in enumerate(zip(param_names, fitter.parameters)):
+        for i, (name, val) in enumerate(zip(model.param_list, fitter.parameters)):
             err_low, err_high = errs[i]
             rel_err_mean = rel_errs[i] * 100
-            res[f"{name}_err_low"] = float(err_low)
-            res[f"{name}_err_high"] = float(err_high)
-            res[f"{name}_err_rel(%)"] = float(rel_err_mean)
+            res[f"{name[0]}_err_low"] = float(err_low)
+            res[f"{name[0]}_err_high"] = float(err_high)
+            res[f"{name[0]}_err_rel(%)"] = float(rel_err_mean)
         
         return res
     
@@ -170,19 +202,21 @@ class SpectralFitterManager:
         """
         Ejecuta análisis espectral completo
         """
-        print("⚡ Ejecutando análisis espectral...")
+        print("Ejecutando analisis espectral...")
+        
+        # Inicializar el modelo una sola vez
+        self.initialize_model()
         
         # Precalcular respuestas
         rsps_interpoladas = self.precompute_responses(rsps, time_ranges)
         
         results = []
-        valid_count = 0
         
         # Procesar cada intervalo
         for i, (t0, t1) in enumerate(time_ranges):
             print(f"   Intervalo {i+1}/{len(time_ranges)}: {t0:.3f}–{t1:.3f} s", end=" ")
             
-            # Extraer datos PHA para el intervalo
+            # Extraer datos PHA
             phas = cspecs.to_pha(
                 time_ranges=[(t0, t1)],
                 nai_kwargs={'energy_range': erange_nai},
@@ -192,14 +226,14 @@ class SpectralFitterManager:
             # Obtener respuestas interpoladas
             rsps_interp = rsps_interpoladas[i]
             
-            # Ajustar espectro (se crea un nuevo modelo dentro de fit_interval)
+            # Ajustar
             result = self.fit_interval(phas, bkgds, rsps_interp, t0, t1)
             
             if result:
                 results.append(result)
-                valid_count += 1
+                print("Fit guardado")
             else:
-                print("❌ Fit falló")
+                print("Fit fallo")
         
-        print(f"✅ Análisis espectral completado: {valid_count}/{len(time_ranges)} ajustes válidos")
+        print(f"Analisis espectral completado: {len(results)}/{len(time_ranges)} ajustes validos")
         return results

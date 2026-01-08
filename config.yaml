@@ -22,16 +22,23 @@ burst_detection:
   sigma_threshold: 3
 
 spectral_fitting:
-  model: "Band"
-  model_params:
-    min_values: [1e-10, 0.01, -1.9, -10.0, 0.01]
-    max_values: ["inf", 5e4, 1.5, -2.05, "inf"]
-    default_values: [0.01, 500.0, -0.5, -2.3, 100.0]
-    fixed: [False, False, False, True, False]
+  #model_expression: "Band()"
+  #min_values: [1e-10, 0.01, -1.9, -10.0, 0.01]
+  #max_values: ["inf", 5e4, 1.5, -2.05, "inf"]
+  #default_values: [0.01, 500.0, -0.5, -2.3, 100.0]
+  #fixed: [false, false, false, true, false]
+  #eval_indices: [1, 2]
+
+  model_expression: "BlackBody() + PowerLaw() + Comptonized()"
+  fixed: [true, true, false, true, true, false, true, true, true]
+  eval_indices: [1, 6]
+
   fit_options:
     method: "TNC"
     maxiter: 500
   time_interval: 1.0
+  #analysis_start: 5.0   # Iniciar análisis en 5.0 segundos
+  #analysis_stop: 15.0  # Detener análisis en 15.0 segundos
   max_fit_time: 10
   relative_error_threshold: 0.2
 

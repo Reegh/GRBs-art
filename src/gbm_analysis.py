@@ -98,16 +98,52 @@ class GBMAnalysis:
         if self.burst_start is None or self.burst_end is None:
             raise ValueError("Burst debe detectarse primero")
         
-        time_interval = self.config.get_fitting_params()['time_interval']
-        time_edges = np.arange(self.burst_start, self.burst_end, time_interval)
+        # Obtener configuración
+        fit_params = self.config.get_fitting_params()
+        time_interval = fit_params.get('time_interval', 1.0)
+        
+        # Obtener rango de análisis (manual o automático)
+        analysis_start = fit_params.get('analysis_start')
+        analysis_stop = fit_params.get('analysis_stop')
+        
+        # Determinar inicio del análisis
+        if analysis_start is not None:
+            start = float(analysis_start)
+            print(f"   Usando inicio MANUAL: {start:.2f} s")
+        else:
+            start = self.burst_start
+            print(f"   Usando inicio DETECTADO: {start:.2f} s")
+        
+        # Determinar fin del análisis
+        if analysis_stop is not None:
+            stop = float(analysis_stop)
+            print(f"   Usando fin MANUAL: {stop:.2f} s")
+        else:
+            stop = self.burst_end
+            print(f"   Usando fin DETECTADO: {stop:.2f} s")
+        
+        # Verificar que el rango sea válido
+        if start >= stop:
+            raise ValueError(f"Rango inválido: start={start:.2f} >= stop={stop:.2f}")
+        
+        # Verificar que esté dentro del burst detectado (solo advertencia)
+        if start < self.burst_start:
+            print(f"   Advertencia: Inicio del análisis ({start:.2f}) es ANTES del burst detectado ({self.burst_start:.2f})")
+        
+        if stop > self.burst_end:
+            print(f"   Advertencia: Fin del análisis ({stop:.2f}) es DESPUÉS del burst detectado ({self.burst_end:.2f})")
+        
+        # Generar intervalos
+        time_edges = np.arange(start, stop, time_interval)
         
         self.time_ranges = [
             (t, t + time_interval) 
             for t in time_edges 
-            if t + time_interval <= self.burst_end
+            if t + time_interval <= stop
         ]
         
-        print(f"   Intervalo del burst: {self.burst_start:.2f} - {self.burst_end:.2f} s")
+        print(f"   Intervalo de análisis: {start:.2f} - {stop:.2f} s")
+        print(f"   Duración total: {stop - start:.2f} s")
         print(f"   Tamaño de bin: {time_interval} s")
         print(f"   Número de intervalos: {len(self.time_ranges)}")
         
