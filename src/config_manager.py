@@ -45,3 +45,11 @@ class ConfigManager:
     def get_model_params(self) -> dict:
         """Obtiene parámetros específicos del modelo"""
         return self.config['spectral_fitting']['model_params']
+    
+    def get_plotting_params(self) -> dict:
+        """Obtiene parámetros para gráficas"""
+        return self.config.get('plotting', {})
+    
+    def get_all_config(self) -> dict:
+        """Obtiene toda la configuración"""
+        return self.config

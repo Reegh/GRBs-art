@@ -1,5 +1,7 @@
 # src/gbm_analysis.py
 import numpy as np
+import pandas as pd
+import os
 from typing import Tuple, List
 
 from config_manager import ConfigManager
@@ -179,6 +181,46 @@ class GBMAnalysis:
         
         return self.results_manager.save_results(self.results)
     
+    def generate_plots(self):
+        """Genera gráficas de los resultados"""
+        print("\n" + "=" * 50)
+        print("GENERANDO GRÁFICAS")
+        print("=" * 50)
+        
+        # Obtener configuración de plotting
+        plotting_config = self.config.get_plotting_params()
+        
+        # Verificar si se deben guardar gráficas
+        if not plotting_config.get('save_plots', False):
+            print("   Gráficas desactivadas en configuración")
+            return
+        
+        # Obtener parámetros a graficar
+        parameters = plotting_config.get('parameters', [])
+        if not parameters:
+            print("   No se especificaron parámetros para graficar")
+            return
+        
+        # Obtener directorio de salida
+        plots_dir = plotting_config.get('plots_dir', 'results/plots')
+        
+        # Crear directorio si no existe
+        os.makedirs(plots_dir, exist_ok=True)
+        
+        # Convertir resultados a DataFrame
+        if not self.results:
+            print("   No hay resultados para graficar")
+            return
+        
+        df = pd.DataFrame(self.results)
+        
+        # Llamar al método de graficado del ResultsManager
+        try:
+            self.results_manager.plot_parameters(df, parameters, plots_dir)
+            print(f"   Gráficas generadas en: {plots_dir}")
+        except Exception as e:
+            print(f"   Error al generar gráficas: {e}")
+    
     def run_full_analysis(self):
         """Ejecuta el flujo completo de análisis"""
         try:
@@ -203,12 +245,15 @@ class GBMAnalysis:
             # Paso 7: Guardar resultados
             self.save_results()
             
+            # Paso 8: Generar gráficas
+            self.generate_plots()
+            
             print("\n" + "=" * 50)
-            print("ANÁLISIS COMPLETADO EXITOSAMENTE")
+            print("ANALISIS COMPLETADO EXITOSAMENTE")
             print("=" * 50)
             
         except Exception as e:
-            print(f"\n Error durante el análisis: {e}")
+            print(f"\n Error durante el analisis: {e}")
             raise
     
     def get_summary(self) -> dict:
