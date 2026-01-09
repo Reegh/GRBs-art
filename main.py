@@ -16,26 +16,6 @@ def main():
     # Ejecutar análisis completo
     print("Iniciando análisis GBM completo...")
     analysis.run_full_analysis()
-
-    # Generar gráficas
-    if analysis.results and len(analysis.results) > 0:
-        print("\nGenerando gráficas...")
-        
-        # Importar pandas
-        import pandas as pd
-        
-        # Convertir resultados a DataFrame
-        df = pd.DataFrame(analysis.results)
-        
-        # Obtener directorio de gráficas
-        plotting_config = analysis.config.config.get('plotting', {})
-        plots_dir = plotting_config.get('plots_dir', 'results/plots')
-        
-        # Usar ResultsManager para generar gráficas
-        analysis.results_manager.plot_parameters(
-            df=df,
-            output_dir=plots_dir
-        )
     
     # Mostrar resumen
     summary = analysis.get_summary()
@@ -67,17 +47,9 @@ def run_step_by_step():
     
     # Paso 7: Guardar resultados
     analysis.save_results()
-
+    
     # Paso 8: Generar gráficas
-    if analysis.results:
-        print("\nGenerando gráficas...")
-        import pandas as pd
-        df = pd.DataFrame(analysis.results)
-        
-        plotting_config = analysis.config.config.get('plotting', {})
-        plots_dir = plotting_config.get('plots_dir', 'results/plots')
-        
-        analysis.results_manager.plot_parameters(df, output_dir=plots_dir)
+    analysis.generate_plots()
     
 
 if __name__ == "__main__":
