@@ -18,7 +18,7 @@ class DataLoader:
         
     def load_tte_data(self) -> GbmTte:
         """Carga datos TTE para análisis de curvas de luz"""
-        tte_path = self.config.get_data_path('tte_n7')
+        tte_path = self.config.get_data_path('tte_nai1')
         if not os.path.exists(tte_path):
             raise FileNotFoundError(f"Archivo TTE no encontrado: {tte_path}")
         
@@ -27,7 +27,7 @@ class DataLoader:
     
     def load_cspec_data(self) -> GbmDetectorCollection:
         """Carga datos CSPEC de todos los detectores"""
-        detectors = ['cspec_n7', 'cspec_n3', 'cspec_b0']
+        detectors = ['cspec_nai1', 'cspec_nai2', 'cspec_bgo1']
         phaii_list = []
         
         for det in detectors:
@@ -42,7 +42,7 @@ class DataLoader:
     
     def load_response_files(self) -> GbmDetectorCollection:
         """Carga archivos de respuesta"""
-        rsp_keys = ['rsp_n7', 'rsp_n3', 'rsp_b0']
+        rsp_keys = ['rsp_nai1', 'rsp_nai2', 'rsp_bgo1']
         rsp_list = []
         
         for key in rsp_keys:

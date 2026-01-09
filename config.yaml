@@ -1,12 +1,12 @@
 # config.yaml
 data_paths:
-  tte_n7: "data/glg_tte_n7_bn090926181_v00.fit"
-  cspec_n7: "data/glg_cspec_n7_bn090926181_v00.pha"
-  cspec_n3: "data/glg_cspec_n3_bn090926181_v00.pha"
-  cspec_b0: "data/glg_cspec_b0_bn090926181_v00.pha"
-  rsp_n7: "data/glg_cspec_n7_bn090926181_v00.rsp2"
-  rsp_n3: "data/glg_cspec_n3_bn090926181_v00.rsp2"
-  rsp_b0: "data/glg_cspec_b0_bn090926181_v00.rsp2"
+  tte_nai1: "data/glg_tte_n7_bn090926181_v00.fit"
+  cspec_nai1: "data/glg_cspec_n7_bn090926181_v00.pha"
+  cspec_nai2: "data/glg_cspec_n3_bn090926181_v00.pha"
+  cspec_bgo1: "data/glg_cspec_b0_bn090926181_v00.pha"
+  rsp_nai1: "data/glg_cspec_n7_bn090926181_v00.rsp2"
+  rsp_nai2: "data/glg_cspec_n3_bn090926181_v00.rsp2"
+  rsp_bgo1: "data/glg_cspec_b0_bn090926181_v00.rsp2"
 
 energy_ranges:
   nai: [8.0, 900.0]
