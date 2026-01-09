@@ -1,0 +1,66 @@
+{
+  "objects": [
+    {
+      "name": "GRB090926_Band",
+      "description": "GRB090926 - Band estándar (beta fijo)",
+      "data_paths": {
+        "tte_nai1": "glg_tte_n7_bn090926181_v00.fit",
+        "cspec_nai1": "glg_cspec_n7_bn090926181_v00.pha",
+        "cspec_nai2": "glg_cspec_n3_bn090926181_v00.pha",
+        "cspec_bgo1": "glg_cspec_b0_bn090926181_v00.pha",
+        "rsp_nai1": "glg_cspec_n7_bn090926181_v00.rsp2",
+        "rsp_nai2": "glg_cspec_n3_bn090926181_v00.rsp2",
+        "rsp_bgo1": "glg_cspec_b0_bn090926181_v00.rsp2"
+      },
+      "model_config": {
+        "model_expression": "Band()",
+        "min_values": [1e-10, 0.01, -1.9, -10.0, 0.01],
+        "max_values": ["inf", 5e4, 1.5, -2.05, "inf"],
+        "default_values": [0.01, 500.0, -0.5, -2.3, 100.0],
+        "fixed": [false, false, false, true, false],
+        "eval_indices": [1, 2]
+      },
+      "analysis_config": {
+        "time_interval": 1.0,
+        "analysis_start": null,
+        "analysis_stop": null
+      },
+      "plotting_config": {
+        "parameters": ["Epeak", "alpha", "beta"],
+        "save_plots": true
+      }
+    },
+    {
+      "name": "GRB201216963_Band",
+      "description": "GRB201216963 - Band con beta fijo",
+      "data_paths": {
+        "tte_nai1": "glg_tte_n9_bn201216963_v00.fit",
+        "cspec_nai1": "glg_cspec_n9_bn201216963_v00.pha",
+        "cspec_nai2": "glg_cspec_na_bn201216963_v00.pha",
+        "cspec_bgo1": "glg_cspec_b1_bn201216963_v00.pha",
+        "rsp_nai1": "glg_cspec_n9_bn201216963_v02.rsp2",
+        "rsp_nai2": "glg_cspec_na_bn201216963_v02.rsp2",
+        "rsp_bgo1": "glg_cspec_b1_bn201216963_v02.rsp2"
+      },
+      "model_config": {
+        "model_expression": "Band()",
+        "min_values": [1e-10, 0.01, -1.9, -10.0, 0.01],
+        "max_values": ["inf", 5e4, 1.5, -2.05, "inf"],
+        "default_values": [0.01, 500.0, -0.5, -2.3, 100.0],
+        "fixed": [false, false, false, true, false],
+        "eval_indices": [1, 2]
+      },
+      "analysis_config": {
+        "time_interval": 1.0,
+        "analysis_start": 5.0,
+        "analysis_stop": 15.0
+      },
+      "plotting_config": {
+        "parameters": ["Epeak", "alpha", "beta"],
+        "save_plots": true
+      }
+    }
+  ],
+  "default_data_dir": "data",
+  "default_results_dir": "results"
+}
