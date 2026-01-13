@@ -1,0 +1,38 @@
+[
+  {
+    "object": "GRB090926_Band",
+    "detector": "nai1",
+    "status": "success",
+    "plot": "results/lightcurves/GRB090926_Band/GRB090926_Band_nai1_lightcurve.png"
+  },
+  {
+    "object": "GRB090926_Band",
+    "detector": "nai2",
+    "status": "success",
+    "plot": "results/lightcurves/GRB090926_Band/GRB090926_Band_nai2_lightcurve.png"
+  },
+  {
+    "object": "GRB090926_Band",
+    "detector": "bgo1",
+    "status": "success",
+    "plot": "results/lightcurves/GRB090926_Band/GRB090926_Band_bgo1_lightcurve.png"
+  },
+  {
+    "object": "GRB201216963_Band",
+    "detector": "nai1",
+    "status": "success",
+    "plot": "results/lightcurves/GRB201216963_Band/GRB201216963_Band_nai1_lightcurve.png"
+  },
+  {
+    "object": "GRB201216963_Band",
+    "detector": "nai2",
+    "status": "success",
+    "plot": "results/lightcurves/GRB201216963_Band/GRB201216963_Band_nai2_lightcurve.png"
+  },
+  {
+    "object": "GRB201216963_Band",
+    "detector": "bgo1",
+    "status": "success",
+    "plot": "results/lightcurves/GRB201216963_Band/GRB201216963_Band_bgo1_lightcurve.png"
+  }
+]
