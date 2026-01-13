@@ -22,12 +22,28 @@
       },
       "analysis_config": {
         "time_interval": 1.0,
-        "analysis_start": null,
-        "analysis_stop": null
+        "analysis_start": -25,
+        "analysis_stop": 150,
+        "background": {
+          "polynomial_order": 1,
+          "pre_bkg_range": [50, 10],
+          "post_bkg_range": [10, 50]
+        }
       },
       "plotting_config": {
         "parameters": ["Epeak", "alpha", "beta"],
         "save_plots": true
+      },
+      "spectrum_config": {
+        "detector_especifico": "n7",
+        "rangos_energia": [
+          {"nombre": "Soft", "min": 8.0, "max": 90.0},
+          {"nombre": "Medium", "min": 90.0, "max": 300.0},
+          {"nombre": "Hard", "min": 300.0, "max": 900.0}
+        ],
+        "rango_completo": [8.0, 900.0],
+        "time_range": [0.0, 10.0],
+        "detectores_completos": ["n7", "n3", "b0"]
       }
     },
     {
@@ -52,12 +68,28 @@
       },
       "analysis_config": {
         "time_interval": 1.0,
-        "analysis_start": 5.0,
-        "analysis_stop": 15.0
+        "analysis_start": -25,
+        "analysis_stop": 150.0,
+        "background": {
+          "polynomial_order": 1,
+          "pre_bkg_range": [20, 25],
+          "post_bkg_range": [75, 200]
+        }
       },
       "plotting_config": {
         "parameters": ["Epeak", "alpha", "beta"],
         "save_plots": true
+      },
+      "spectrum_config": {
+        "detector_especifico": "n9",
+        "rangos_energia": [
+          {"nombre": "Soft", "min": 8.0, "max": 30.0},
+          {"nombre": "Medium", "min": 30.0, "max": 300.0},
+          {"nombre": "Hard", "min": 300.0, "max": 900.0}
+        ],
+        "rango_completo": [8.0, 900.0],
+        "time_range": [0.0, 10.0],
+        "detectores_completos": ["n9", "na", "b1"]
       }
     }
   ],

@@ -3,3 +3,6 @@ src/__pycache__/
 Spectral_Analysis_Tutorial.ipynb
 .gdt/
 data/
+.venv/
+__pycache__/
+*.pyc
