@@ -6,3 +6,5 @@ data/
 .venv/
 __pycache__/
 *.pyc
+intt.py 
+graf.py

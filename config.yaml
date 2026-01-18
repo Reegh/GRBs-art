@@ -1,6 +1,8 @@
 # config.yaml
 data_paths:
   tte_nai1: "data/glg_tte_n7_bn090926181_v00.fit"
+  tte_nai2: "data/glg_tte_n3_bn090926181_v00.fit"
+  tte_bgo1: "data/glg_tte_na_bn201216963_v00.fit"
   cspec_nai1: "data/glg_cspec_n7_bn090926181_v00.pha"
   cspec_nai2: "data/glg_cspec_n3_bn090926181_v00.pha"
   cspec_bgo1: "data/glg_cspec_b0_bn090926181_v00.pha"
