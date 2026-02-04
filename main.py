@@ -1,59 +1,76 @@
 # main.py
 import sys
 import os
+import argparse
 
 # Agregar src al path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from gbm_analysis import GBMAnalysis
+from light import LightCurveGenerator
 
-def main():
-    """Función principal para ejecutar el análisis"""
-    
-    # Crear instancia del análisis
-    analysis = GBMAnalysis('config.yaml')
-    
-    # Ejecutar análisis completo
-    print("Iniciando análisis GBM completo...")
+
+def run_lightcurves(config_path: str):
+    """Genera curvas de luz"""
+    print("\nIniciando generación de curvas de luz...")
+    lc_generator = LightCurveGenerator(config_path)
+    lc_generator.generar_todos_los_detectores()
+    print("Curvas de luz finalizadas.")
+
+
+def run_analysis(config_path: str):
+    """Ejecuta el análisis GBM completo"""
+    print("\nIniciando análisis GBM completo...")
+    analysis = GBMAnalysis(config_path)
     analysis.run_full_analysis()
-    
-    # Mostrar resumen
+
     summary = analysis.get_summary()
     print("\nResumen del análisis:")
     for key, value in summary.items():
         print(f"   {key}: {value}")
 
-def run_step_by_step():
-    """Ejecutar análisis paso a paso"""
-    analysis = GBMAnalysis('config.yaml')
-    
-    # Paso 1: Cargar datos
-    analysis.load_data()
-    
-    # Paso 2: Calcular T90
-    analysis.calculate_t90()
-    
-    # Paso 3: Ajustar backgrounds
-    analysis.fit_backgrounds()
-    
-    # Paso 4: Detectar burst
-    analysis.detect_burst()
-    
-    # Paso 5: Definir intervalos
-    analysis.define_time_intervals()
-    
-    # Paso 6: Análisis espectral
-    analysis.run_spectral_analysis()
-    
-    # Paso 7: Guardar resultados
-    analysis.save_results()
-    
-    # Paso 8: Generar gráficas
-    analysis.generate_plots()
-    
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Pipeline de análisis Fermi-GBM"
+    )
+
+    parser.add_argument(
+        "--analysis",
+        action="store_true",
+        help="Ejecutar solo el análisis GBM",
+    )
+
+    parser.add_argument(
+        "--lightcurves",
+        action="store_true",
+        help="Generar solo curvas de luz",
+    )
+
+    args = parser.parse_args()
+
+    config_path = "config.yaml"
+
+    # Caso 1: no se pasa ningún flag -> ejecutar todo
+    if not args.analysis and not args.lightcurves:
+        run_lightcurves(config_path)
+        run_analysis(config_path)
+        return
+
+    # Caso 2: solo curvas de luz
+    if args.lightcurves and not args.analysis:
+        run_lightcurves(config_path)
+        return
+
+    # Caso 3: solo análisis GBM
+    if args.analysis and not args.lightcurves:
+        run_analysis(config_path)
+        return
+
+    # Caso 4: ambos flags explícitos
+    run_lightcurves(config_path)
+    run_analysis(config_path)
+
 
 if __name__ == "__main__":
-    # Ejecutar análisis completo
     main()
-    
-    # run_step_by_step()
