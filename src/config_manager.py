@@ -53,3 +53,7 @@ class ConfigManager:
     def get_all_config(self) -> dict:
         """Obtiene toda la configuración"""
         return self.config
+    
+    def get_t90_params(self) -> dict:
+        """Obtiene parámetros manuales de T90"""
+        return self.config['t90']

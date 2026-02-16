@@ -1,16 +1,20 @@
 # config.yaml
 data_paths:
-  tte_nai1: "data/glg_tte_n7_bn090926181_v00.fit"
-  cspec_nai1: "data/glg_cspec_n7_bn090926181_v00.pha"
-  cspec_nai2: "data/glg_cspec_n3_bn090926181_v00.pha"
-  cspec_bgo1: "data/glg_cspec_b0_bn090926181_v00.pha"
-  rsp_nai1: "data/glg_cspec_n7_bn090926181_v00.rsp2"
-  rsp_nai2: "data/glg_cspec_n3_bn090926181_v00.rsp2"
-  rsp_bgo1: "data/glg_cspec_b0_bn090926181_v00.rsp2"
+  tte_nai1: "data/glg_tte_n1_bn251118855_v00.fit"
+  cspec_nai1: "data/glg_cspec_n1_bn251118855_v00.pha"
+  cspec_nai2: "data/glg_cspec_n2_bn251118855_v00.pha"
+  cspec_bgo1: "data/glg_cspec_b0_bn251118855_v00.pha"
+  rsp_nai1: "data/glg_cspec_n1_bn251118855_v02.rsp2"
+  rsp_nai2: "data/glg_cspec_n2_bn251118855_v02.rsp2"
+  rsp_bgo1: "data/glg_cspec_b0_bn251118855_v02.rsp2"
 
 energy_ranges:
   nai: [8.0, 900.0]
   bgo: [325.0, 25000.0]
+
+t90:
+  t0: 0.0
+  T90: 46.593
 
 background:
   pre_bkg_range: [50, 10]
@@ -27,25 +31,24 @@ spectral_fitting:
   #max_values: ["inf", 5e4, 1.5, -2.05, "inf"]
   #default_values: [0.01, 500.0, -0.5, -2.3, 100.0]
   #fixed: [false, false, false, true, false]
-  #eval_indices: [1, 2]
+  #eval_indices: [3]
 
-  model_expression: "BlackBody() + PowerLaw() + Comptonized()"
-  fixed: [true, true, false, true, true, false, true, true, true]
-  eval_indices: [1, 6]
+  model_expression: "Comptonized()"
+  eval_indices: [1]
 
   fit_options:
     method: "TNC"
     maxiter: 500
-  time_interval: 1.0
-  #analysis_start: 5.0   # Iniciar análisis en 5.0 segundos
-  #analysis_stop: 15.0  # Detener análisis en 15.0 segundos
+  time_interval: 15.0
+  analysis_start: 5.0
+  analysis_stop: 20.0
   max_fit_time: 10
-  relative_error_threshold: 0.2
+  relative_error_threshold: 20.0
 
 plotting:
   parameters: ["Epeak", "alpha", "beta", "A"]  # Parámetros a graficar
-  save_plots: true
+  save_plots: false
   plots_dir: "results/plots"
 
 output:
-  file_name: "results/valid_fits.csv"
+  file_name: "results/comp1_fit.csv"

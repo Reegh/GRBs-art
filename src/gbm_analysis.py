@@ -6,7 +6,6 @@ from typing import Tuple, List
 
 from config_manager import ConfigManager
 from data_loader import DataLoader
-from t90_calculator import T90Calculator
 from background_fitter import BackgroundFitterManager
 from burst_detector import BurstDetector
 from spectral_fitter import SpectralFitterManager
@@ -18,7 +17,6 @@ class GBMAnalysis:
     def __init__(self, config_path: str = "config.yaml"):
         self.config = ConfigManager(config_path)
         self.data_loader = DataLoader(self.config)
-        self.t90_calc = T90Calculator()
         self.bkg_fitter = BackgroundFitterManager(self.config)
         self.burst_detector = BurstDetector(self.config)
         self.spectral_fitter = SpectralFitterManager(self.config)
@@ -33,8 +31,7 @@ class GBMAnalysis:
         self.erange_bgo = None
         
         # Resultados intermedios
-        self.T5 = None
-        self.T95 = None
+        self.t0 = None
         self.T90 = None
         self.bkgds = None
         self.burst_start = None
@@ -57,29 +54,32 @@ class GBMAnalysis:
         # Obtener rangos de energía
         self.erange_nai, self.erange_bgo = self.data_loader.get_energy_ranges()
         
+        # Leer t0 y T90 desde config
+        t90_params = self.config.get_t90_params()
+        self.t0 = float(t90_params["t0"])
+        self.T90 = float(t90_params["T90"])
+        
+        print(f"t0 = {self.t0:.2f} s")
+        print(f"T90 = {self.T90:.2f} s")
         print("Datos cargados exitosamente")
     
-    def calculate_t90(self) -> Tuple[float, float, float]:
-        """Calcula T90 del burst"""
-        print("\n" + "=" * 50)
-        print("CÁLCULO DE T90")
-        print("=" * 50)
-        
-        self.T5, self.T95, self.T90 = self.t90_calc.calculate(self.phaii7)
-        self.t90_calc.print_results(self.T5, self.T95, self.T90)
-        
-        return self.T5, self.T95, self.T90
-    
     def fit_backgrounds(self):
-        """Ajusta backgrounds usando T5 y T95"""
+        """Ajusta backgrounds usando t0 y T90"""
         print("\n" + "=" * 50)
         print("AJUSTE DE BACKGROUND")
         print("=" * 50)
         
-        if self.T5 is None or self.T95 is None:
-            raise ValueError("T5 y T95 deben calcularse primero")
+        if self.t0 is None or self.T90 is None:
+            raise ValueError("t0 y T90 deben estar definidos")
         
-        self.bkgds = self.bkg_fitter.fit_background(self.cspecs, self.T5, self.T95)
+        burst_start = self.t0
+        burst_end = self.t0 + self.T90
+        
+        self.bkgds = self.bkg_fitter.fit_background(
+            self.cspecs,
+            burst_start,
+            burst_end
+        )
         return self.bkgds
     
     def detect_burst(self):
@@ -104,51 +104,24 @@ class GBMAnalysis:
         fit_params = self.config.get_fitting_params()
         time_interval = fit_params.get('time_interval', 1.0)
         
-        # Obtener rango de análisis (manual o automático)
         analysis_start = fit_params.get('analysis_start')
         analysis_stop = fit_params.get('analysis_stop')
         
-        # Determinar inicio del análisis
-        if analysis_start is not None:
-            start = float(analysis_start)
-            print(f"   Usando inicio MANUAL: {start:.2f} s")
-        else:
-            start = self.burst_start
-            print(f"   Usando inicio DETECTADO: {start:.2f} s")
+        start = float(analysis_start) if analysis_start is not None else self.burst_start
+        stop = float(analysis_stop) if analysis_stop is not None else self.burst_end
         
-        # Determinar fin del análisis
-        if analysis_stop is not None:
-            stop = float(analysis_stop)
-            print(f"   Usando fin MANUAL: {stop:.2f} s")
-        else:
-            stop = self.burst_end
-            print(f"   Usando fin DETECTADO: {stop:.2f} s")
-        
-        # Verificar que el rango sea válido
         if start >= stop:
             raise ValueError(f"Rango inválido: start={start:.2f} >= stop={stop:.2f}")
         
-        # Verificar que esté dentro del burst detectado (solo advertencia)
-        if start < self.burst_start:
-            print(f"   Advertencia: Inicio del análisis ({start:.2f}) es ANTES del burst detectado ({self.burst_start:.2f})")
-        
-        if stop > self.burst_end:
-            print(f"   Advertencia: Fin del análisis ({stop:.2f}) es DESPUÉS del burst detectado ({self.burst_end:.2f})")
-        
-        # Generar intervalos
         time_edges = np.arange(start, stop, time_interval)
         
         self.time_ranges = [
-            (t, t + time_interval) 
-            for t in time_edges 
+            (t, t + time_interval)
+            for t in time_edges
             if t + time_interval <= stop
         ]
         
-        print(f"   Intervalo de análisis: {start:.2f} - {stop:.2f} s")
-        print(f"   Duración total: {stop - start:.2f} s")
-        print(f"   Tamaño de bin: {time_interval} s")
-        print(f"   Número de intervalos: {len(self.time_ranges)}")
-        
+        print(f"Intervalos definidos: {len(self.time_ranges)}")
         return self.time_ranges
     
     def run_spectral_analysis(self):
@@ -157,11 +130,6 @@ class GBMAnalysis:
         print("ANÁLISIS ESPECTRAL")
         print("=" * 50)
         
-        # Verificar que todos los datos estén cargados
-        if None in [self.cspecs, self.bkgds, self.rsps, self.time_ranges]:
-            raise ValueError("Todos los datos deben cargarse antes del análisis espectral")
-        
-        # Ejecutar análisis espectral
         self.results = self.spectral_fitter.run_spectral_analysis(
             cspecs=self.cspecs,
             bkgds=self.bkgds,
@@ -170,7 +138,6 @@ class GBMAnalysis:
             erange_nai=self.erange_nai,
             erange_bgo=self.erange_bgo
         )
-        
         return self.results
     
     def save_results(self):
@@ -224,38 +191,17 @@ class GBMAnalysis:
     def run_full_analysis(self):
         """Ejecuta el flujo completo de análisis"""
         try:
-            # Paso 1: Cargar datos
             self.load_data()
-            
-            # Paso 2: Calcular T90
-            self.calculate_t90()
-            
-            # Paso 3: Ajustar backgrounds
             self.fit_backgrounds()
-            
-            # Paso 4: Detectar burst
             self.detect_burst()
-            
-            # Paso 5: Definir intervalos
             self.define_time_intervals()
-            
-            # Paso 6: Análisis espectral
             self.run_spectral_analysis()
-            
-            # Paso 7: Guardar resultados
             self.save_results()
-            
-            # Paso 8: Generar gráficas
             self.generate_plots()
-            
-            print("\n" + "=" * 50)
-            print("ANALISIS COMPLETADO EXITOSAMENTE")
-            print("=" * 50)
-            
         except Exception as e:
             print(f"\n Error durante el analisis: {e}")
             raise
-    
+
     def get_summary(self) -> dict:
         """Obtiene resumen del análisis"""
         return {
