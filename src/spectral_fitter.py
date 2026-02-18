@@ -252,31 +252,42 @@ class SpectralFitterManager:
 
         fit_params = self.config.get_fitting_params()
 
-        # Verificar si está habilitado
         if not fit_params.get("save_plots", False):
             return
 
         output_dir = fit_params.get("plots_output_dir", "spectral_plots")
         os.makedirs(output_dir, exist_ok=True)
 
-        # Limpiar nombre del modelo para archivo
-        model_name = self.model_expression
-        model_name = re.sub(r'[^a-zA-Z0-9_]+', '_', model_name)
+        views = fit_params.get("plot_view", "photon")
 
-        # Crear plot
-        modelplot = ModelFit(fitter=fitter)
+        # permitir string o lista
+        if isinstance(views, str):
+            views = [views]
 
-        ModelFit.hide_residuals(modelplot)
-        plt.ylim(1e-4, 200)
-        plt.xlim(7.15, 4000)
-        ModelFit.show_residuals(modelplot)
+        model_name = re.sub(r'[^a-zA-Z0-9_]+', '_', self.model_expression)
 
-        filename = os.path.join(
-            output_dir,
-            f"{model_name}_{t0:.3f}_{t1:.3f}.png"
-        )
+        for view in views:
 
-        plt.savefig(filename, dpi=300, bbox_inches="tight")
-        plt.close()
+            plt.figure()
 
-        print(f"   Plot guardado en {filename}")
+            if view == "nufnu":
+                modelplot = ModelFit(fitter=fitter, view='nufnu')
+                ModelFit.hide_residuals(modelplot)
+                modelplot.ax.grid(which='both')
+                suffix = "nufnu"
+
+            else:
+                modelplot = ModelFit(fitter=fitter)
+                ModelFit.hide_residuals(modelplot)
+                plt.ylim(1e-4, 200)
+                plt.xlim(7.15, 4000)
+                ModelFit.show_residuals(modelplot)
+                suffix = "photon"
+
+            filename = os.path.join(
+                output_dir,
+                f"{model_name}_{suffix}_{t0:.3f}_{t1:.3f}.png"
+            )
+
+            plt.savefig(filename, dpi=300, bbox_inches="tight")
+            plt.close()

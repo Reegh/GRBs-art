@@ -33,10 +33,11 @@ spectral_fitting:
   #fixed: [false, false, false, true, false]
   #eval_indices: [3]
 
-  model_expression: "BlackBody()"
+  model_expression: "Comptonized()"
   eval_indices: [1]
 
   save_plots: true
+  plot_view: "nufnu"
   plots_output_dir: "results/espectros"
 
   fit_options:
@@ -54,4 +55,4 @@ plotting:
   plots_dir: "results/plots"
 
 output:
-  file_name: "results/bb2_fit.csv"
+  file_name: "results/comp2_fit.csv"
