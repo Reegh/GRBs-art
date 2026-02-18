@@ -3,10 +3,16 @@ import time
 import numpy as np
 from typing import List, Dict, Tuple, Optional
 from copy import deepcopy
+import os
+import re
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 from gdt.core.spectra.functions import Band, PowerLaw, Comptonized, BlackBody
 from gdt.core.spectra.fitting import SpectralFitterCstat
 from gdt.missions.fermi.gbm.collection import GbmDetectorCollection
+from gdt.core.plot.model import ModelFit
 
 from config_manager import ConfigManager
 
@@ -159,6 +165,7 @@ class SpectralFitterManager:
             # Guardar si errores aceptables
             if max_rel < error_threshold:
                 res = self._create_result_dict(t0, t1, fitter, model, errs, rel_errs)
+                self.plot_fit(fitter, t0, t1)
                 print(f"{t0:.3f}–{t1:.3f} s: Fit guardado")
                 return res
             else:
@@ -237,3 +244,39 @@ class SpectralFitterManager:
         
         print(f"Analisis espectral completado: {len(results)}/{len(time_ranges)} ajustes validos")
         return results
+    
+    def plot_fit(self, fitter, t0: float, t1: float):
+        """
+        Genera y guarda la gráfica del ajuste espectral si está habilitado en config.
+        """
+
+        fit_params = self.config.get_fitting_params()
+
+        # Verificar si está habilitado
+        if not fit_params.get("save_plots", False):
+            return
+
+        output_dir = fit_params.get("plots_output_dir", "spectral_plots")
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Limpiar nombre del modelo para archivo
+        model_name = self.model_expression
+        model_name = re.sub(r'[^a-zA-Z0-9_]+', '_', model_name)
+
+        # Crear plot
+        modelplot = ModelFit(fitter=fitter)
+
+        ModelFit.hide_residuals(modelplot)
+        plt.ylim(1e-4, 200)
+        plt.xlim(7.15, 4000)
+        ModelFit.show_residuals(modelplot)
+
+        filename = os.path.join(
+            output_dir,
+            f"{model_name}_{t0:.3f}_{t1:.3f}.png"
+        )
+
+        plt.savefig(filename, dpi=300, bbox_inches="tight")
+        plt.close()
+
+        print(f"   Plot guardado en {filename}")

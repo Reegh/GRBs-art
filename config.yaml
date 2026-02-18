@@ -18,7 +18,7 @@ t90:
 
 background:
   pre_bkg_range: [50, 10]
-  post_bkg_range: [10, 50]
+  post_bkg_range: [50, 100]
   polynomial_order: 1
 
 burst_detection:
@@ -33,15 +33,18 @@ spectral_fitting:
   #fixed: [false, false, false, true, false]
   #eval_indices: [3]
 
-  model_expression: "Comptonized()"
+  model_expression: "BlackBody()"
   eval_indices: [1]
+
+  save_plots: true
+  plots_output_dir: "results/espectros"
 
   fit_options:
     method: "TNC"
     maxiter: 500
   time_interval: 15.0
-  analysis_start: 5.0
-  analysis_stop: 20.0
+  analysis_start: 50.0
+  analysis_stop: 65.0
   max_fit_time: 10
   relative_error_threshold: 20.0
 
@@ -51,4 +54,4 @@ plotting:
   plots_dir: "results/plots"
 
 output:
-  file_name: "results/comp1_fit.csv"
+  file_name: "results/bb2_fit.csv"

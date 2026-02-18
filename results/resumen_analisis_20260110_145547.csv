@@ -1,3 +1,0 @@
-objeto,descripcion,timestamp,modelo,intervalo_tiempo,rango_analisis,fits_validos,intervalos_totales,tasa_exito,archivo_salida
-GRB090926_Band,GRB090926 - Band estándar (beta fijo),2026-01-10 14:55:33,Band(),1.0,auto-auto,17,32,53.125,results/GRB090926_Band_fits.csv
-GRB201216963_Band,GRB201216963 - Band con beta fijo,2026-01-10 14:55:47,Band(),1.0,5.0-15.0,10,10,100.0,results/GRB201216963_Band_fits.csv

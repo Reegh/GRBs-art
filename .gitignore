@@ -6,3 +6,5 @@ data/
 .venv/
 __pycache__/
 *.pyc
+Finding_GBM_Data_Tutorial.ipynb
+graf.py

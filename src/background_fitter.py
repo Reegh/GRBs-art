@@ -37,8 +37,8 @@ class BackgroundFitterManager:
         order = bg_params['polynomial_order']
 
         # Definir intervalo del burst usando T90
-        t_burst_start = t0 - 0.5 * T90
-        t_burst_end   = t0 + 0.5 * T90
+        t_burst_start = t0 - T90
+        t_burst_end   = t0 + T90
 
         # Rangos de background
         bkgd_range = [
