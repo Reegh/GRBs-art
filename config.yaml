@@ -1,6 +1,6 @@
 # config.yaml
 data_paths:
-  tte_nai1: "data/glg_tte_n1_bn251118855_v00.fit"
+  tte_nai1: "data-prac/glg_tte_nb_bn231012231_v00.fit"
   cspec_nai1: "data/glg_cspec_n1_bn251118855_v00.pha"
   cspec_nai2: "data/glg_cspec_n2_bn251118855_v00.pha"
   cspec_bgo1: "data/glg_cspec_b0_bn251118855_v00.pha"
@@ -9,7 +9,7 @@ data_paths:
   rsp_bgo1: "data/glg_cspec_b0_bn251118855_v02.rsp2"
 
 energy_ranges:
-  nai: [8.0, 900.0]
+  nai: [50.0, 900.0]
   bgo: [325.0, 25000.0]
 
 t90:
@@ -33,21 +33,22 @@ spectral_fitting:
   #fixed: [false, false, false, true, false]
   #eval_indices: [3]
 
-  model_expression: "Comptonized()"
+  model_expression: "Comptonized() + PowerLaw() + BlackBody()"
+  fixed: [false, false, false, false, false, false, false, false, false]
   eval_indices: [1]
 
   save_plots: true
-  plot_view: "nufnu"
-  plots_output_dir: "results/espectros"
+  plot_view: ["photon","nufnu"]
+  plots_output_dir: "results"
 
   fit_options:
     method: "TNC"
     maxiter: 500
-  time_interval: 15.0
-  analysis_start: 50.0
-  analysis_stop: 65.0
+  time_interval: 3.0
+  analysis_start: 15.0
+  analysis_stop: 21.0
   max_fit_time: 10
-  relative_error_threshold: 20.0
+  relative_error_threshold: 30.0
 
 plotting:
   parameters: ["Epeak", "alpha", "beta", "A"]  # Parámetros a graficar
@@ -55,4 +56,4 @@ plotting:
   plots_dir: "results/plots"
 
 output:
-  file_name: "results/comp2_fit.csv"
+  file_name: "results/fits/first_fit.csv"

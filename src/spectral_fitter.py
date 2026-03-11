@@ -177,8 +177,8 @@ class SpectralFitterManager:
             return None
     
     def _create_result_dict(self, t0: float, t1: float, 
-                          fitter: SpectralFitterCstat, model,
-                          errs: np.ndarray, rel_errs: np.ndarray) -> Dict:
+                      fitter: SpectralFitterCstat, model,
+                      errs: np.ndarray, rel_errs: np.ndarray) -> Dict:
         """Crea diccionario con resultados"""
         res = {
             "t_start": t0,
@@ -187,16 +187,26 @@ class SpectralFitterManager:
             "dof": fitter.dof,
         }
         
-        # Parámetros y errores
-        for name, val in zip(model.param_list, fitter.parameters):
-            res[name[0]] = float(val)
+        # Obtener lista completa de nombres
+        param_names = [p[0] for p in model.param_list]
         
-        for i, (name, val) in enumerate(zip(model.param_list, fitter.parameters)):
-            err_low, err_high = errs[i]
-            rel_err_mean = rel_errs[i] * 100
-            res[f"{name[0]}_err_low"] = float(err_low)
-            res[f"{name[0]}_err_high"] = float(err_high)
-            res[f"{name[0]}_err_rel(%)"] = float(rel_err_mean)
+        # Crear arrays con NaN para los parámetros
+        all_params = [np.nan] * len(param_names)
+        all_errs_low = [np.nan] * len(param_names)
+        all_errs_high = [np.nan] * len(param_names)
+        all_rel_errs = [np.nan] * len(param_names)
+        
+        for i in range(len(fitter.parameters)):
+            all_params[i] = fitter.parameters[i]
+            all_errs_low[i], all_errs_high[i] = errs[i]
+            all_rel_errs[i] = rel_errs[i] * 100
+        
+        # Guardar todos los parámetros
+        for i, name in enumerate(param_names):
+            res[name] = float(all_params[i]) if not np.isnan(all_params[i]) else None
+            res[f"{name}_err_low"] = float(all_errs_low[i]) if not np.isnan(all_errs_low[i]) else None
+            res[f"{name}_err_high"] = float(all_errs_high[i]) if not np.isnan(all_errs_high[i]) else None
+            res[f"{name}_err_rel(%)"] = float(all_rel_errs[i]) if not np.isnan(all_rel_errs[i]) else None
         
         return res
     
