@@ -179,7 +179,7 @@ class SpectralFitterManager:
     def _create_result_dict(self, t0: float, t1: float, 
                       fitter: SpectralFitterCstat, model,
                       errs: np.ndarray, rel_errs: np.ndarray) -> Dict:
-        """Crea diccionario con resultados"""
+        """Crea diccionario con resultados de los parámetros libres"""
         res = {
             "t_start": t0,
             "t_stop": t1,
@@ -187,26 +187,22 @@ class SpectralFitterManager:
             "dof": fitter.dof,
         }
         
-        # Obtener lista completa de nombres
-        param_names = [p[0] for p in model.param_list]
+        # Obtener todos los nombres de parámetros definidos en el modelo
+        all_param_names = [p[0] for p in model.param_list]
         
-        # Crear arrays con NaN para los parámetros
-        all_params = [np.nan] * len(param_names)
-        all_errs_low = [np.nan] * len(param_names)
-        all_errs_high = [np.nan] * len(param_names)
-        all_rel_errs = [np.nan] * len(param_names)
+        # Filtrar solo los nombres de los parámetros que están libres
+        free_param_names = [name for i, name in enumerate(all_param_names) if model.free[i]]
         
-        for i in range(len(fitter.parameters)):
-            all_params[i] = fitter.parameters[i]
-            all_errs_low[i], all_errs_high[i] = errs[i]
-            all_rel_errs[i] = rel_errs[i] * 100
-        
-        # Guardar todos los parámetros
-        for i, name in enumerate(param_names):
-            res[name] = float(all_params[i]) if not np.isnan(all_params[i]) else None
-            res[f"{name}_err_low"] = float(all_errs_low[i]) if not np.isnan(all_errs_low[i]) else None
-            res[f"{name}_err_high"] = float(all_errs_high[i]) if not np.isnan(all_errs_high[i]) else None
-            res[f"{name}_err_rel(%)"] = float(all_rel_errs[i]) if not np.isnan(all_rel_errs[i]) else None
+        # Llenar el diccionario asociando el índice del fit con el nombre libre
+        for i, name in enumerate(free_param_names):
+            val = fitter.parameters[i]
+            low_err, high_err = errs[i]
+            rel_err = rel_errs[i] * 100
+            
+            res[name] = float(val)
+            res[f"{name}_err_low"] = float(low_err)
+            res[f"{name}_err_high"] = float(high_err)
+            res[f"{name}_err_rel(%)"] = float(rel_err)
         
         return res
     
