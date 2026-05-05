@@ -52,6 +52,9 @@ class SpectralFitterManager:
             raise ValueError(f"Error creando modelo: {e}")
         
         # Configurar parámetros si se especifican en YAML
+        if 'fixed' in fit_params:
+            model.free = fit_params['fixed']
+
         if 'min_values' in fit_params:
             min_vals = [float(v) if v != 'inf' else np.inf for v in fit_params['min_values']]
             model.min_values = min_vals
@@ -62,9 +65,6 @@ class SpectralFitterManager:
             
         if 'default_values' in fit_params:
             model.default_values = fit_params['default_values']
-            
-        if 'fixed' in fit_params:
-            model.fix = fit_params['fixed']
         
         # Guardar plantilla del modelo
         self.model_template = model
