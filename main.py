@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from gbm_analysis import GBMAnalysis
 from light import LightCurveGenerator
+from light_with_background import LightCurveBackgroundGenerator
 
 
 def run_lightcurves(config_path: str):
@@ -29,6 +30,12 @@ def run_analysis(config_path: str):
     for key, value in summary.items():
         print(f"   {key}: {value}")
 
+def run_lightcurves_with_background(config_path: str):
+    print("\nIniciando generación de curvas de luz con background...")
+    generator = LightCurveBackgroundGenerator(config_path)
+    generator.generar_todos()
+    print("Proceso finalizado.")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -47,13 +54,22 @@ def main():
         help="Generar solo curvas de luz",
     )
 
+    parser.add_argument(
+        "--light_bkgd",
+        action="store_true",
+        help="Generar curvas de luz con background ajustado",
+    )
+
     args = parser.parse_args()
 
     config_path = "config.yaml"
 
+    any_flag = any([args.analysis, args.lightcurves, args.light_bkgd])
+
     # Caso 1: no se pasa ningún flag -> ejecutar todo
-    if not args.analysis and not args.lightcurves:
+    if not any_flag:
         run_lightcurves(config_path)
+        run_lightcurves_with_background(config_path)
         run_analysis(config_path)
         return
 
@@ -65,6 +81,10 @@ def main():
     # Caso 3: solo análisis GBM
     if args.analysis and not args.lightcurves:
         run_analysis(config_path)
+        return
+    
+    if args.light_bkgd:
+        run_lightcurves_with_background(config_path)
         return
 
     # Caso 4: ambos flags explícitos
