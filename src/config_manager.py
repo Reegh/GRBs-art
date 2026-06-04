@@ -20,11 +20,12 @@ class ConfigManager:
     
     def get_data_path(self, key: str) -> str:
         """Obtiene ruta de archivo de datos"""
-        return self.config['data_paths'][key]
+        return self.config['data_paths'].get(key, None)
     
     def get_energy_range(self, detector_type: str) -> tuple:
         """Obtiene rango de energía para tipo de detector"""
-        return tuple(self.config['energy_ranges'][detector_type])
+        er = self.config['energy_ranges'].get(detector_type, None)
+        return tuple(er) if er is not None else None
     
     def get_background_params(self) -> dict:
         """Obtiene parámetros para ajuste de background"""

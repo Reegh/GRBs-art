@@ -26,32 +26,42 @@ class DataLoader:
         return GbmTte.open(tte_path)
     
     def load_cspec_data(self) -> GbmDetectorCollection:
-        """Carga datos CSPEC de todos los detectores"""
-        detectors = ['cspec_nai1', 'cspec_nai2', 'cspec_bgo1']
+        """Carga datos CSPEC de los detectores configurados"""
+        candidates = ['cspec_nai1', 'cspec_nai2', 'cspec_bgo1']
         phaii_list = []
         
-        for det in detectors:
+        for det in candidates:
             pha_path = self.config.get_data_path(det)
+            if pha_path is None:          # el detector no está en config → omitir
+                continue
             if not os.path.exists(pha_path):
                 raise FileNotFoundError(f"Archivo PHA no encontrado: {pha_path}")
             
             print(f"Cargando datos CSPEC: {pha_path}")
             phaii_list.append(GbmPhaii.open(pha_path))
         
+        if not phaii_list:
+            raise ValueError("No se encontraron detectores CSPEC en la configuración")
+        
         return GbmDetectorCollection.from_list(phaii_list)
     
     def load_response_files(self) -> GbmDetectorCollection:
-        """Carga archivos de respuesta"""
-        rsp_keys = ['rsp_nai1', 'rsp_nai2', 'rsp_bgo1']
+        """Carga archivos de respuesta de los detectores configurados"""
+        candidates = ['rsp_nai1', 'rsp_nai2', 'rsp_bgo1']
         rsp_list = []
         
-        for key in rsp_keys:
+        for key in candidates:
             rsp_path = self.config.get_data_path(key)
+            if rsp_path is None:
+                continue
             if not os.path.exists(rsp_path):
                 raise FileNotFoundError(f"Archivo RSP no encontrado: {rsp_path}")
             
             print(f"Cargando respuesta: {rsp_path}")
             rsp_list.append(RSP.open(rsp_path))
+        
+        if not rsp_list:
+            raise ValueError("No se encontraron archivos de respuesta en la configuración")
         
         return GbmDetectorCollection.from_list(rsp_list)
     
