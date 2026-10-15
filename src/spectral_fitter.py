@@ -280,6 +280,10 @@ class SpectralFitterManager:
                 modelplot = ModelFit(fitter=fitter, view='nufnu')
                 ModelFit.hide_residuals(modelplot)
                 modelplot.ax.grid(which='both')
+                modelplot.ax.set_ylim(1e0, 5e3)
+                ModelFit.show_residuals(modelplot)
+                for ax in modelplot.fig.axes:
+                    ax.set_xscale('log')
                 suffix = "nufnu"
 
             else:
