@@ -169,9 +169,10 @@ class LightCurveGenerator:
             ax.set_xlim(-25.0, 150.0)
 
             if guardar:
-                os.makedirs("results", exist_ok=True)
-                output = (
-                    f"results/lightcurve_{self.grb_nombre}_{nombre}.png"
+                carpeta = os.path.join("results", self.grb_nombre.upper().replace("BN", "GRB"))
+                os.makedirs(carpeta, exist_ok=True)
+                output = os.path.join(
+                    carpeta, f"lightcurve_{self.grb_nombre}_{nombre}.png"
                 )
                 plt.savefig(output, dpi=300, bbox_inches="tight")
 
